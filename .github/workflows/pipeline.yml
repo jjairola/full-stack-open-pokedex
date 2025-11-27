@@ -47,11 +47,21 @@ jobs:
         run: |
           curl "$deploy_url"
 
-      - uses: yu-iskw/merged-pr-info-action@v1.0.1
-        id: merged-pr-info
+      - name: Get merged PR info
+        uses: 8BitJonny/gh-get-current-pr@4.0.0
         if: github.ref == 'refs/heads/main'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        id: PR
+
+        # For reference:
+        # Direct access to common PR properties
+        # prNumber: ${{ steps.PR.outputs.number }}
+        # prUrl: ${{ steps.PR.outputs.pr_url }}
+        # prTitle: ${{ steps.PR.outputs.pr_title }}
+        # prBody: ${{ steps.PR.outputs.pr_body }}
+        # prCreatedAt: ${{ steps.PR.outputs.pr_created_at }}
+        # prMergedAt: ${{ steps.PR.outputs.pr_merged_at }}
+        # prClosedAt: ${{ steps.PR.outputs.pr_closed_at }}
+        # prLabel: ${{ steps.PR.outputs.pr_labels }}
 
       - name: Discord notification sucess
         env:
@@ -62,7 +72,7 @@ jobs:
           !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
           args: >
-            ❌ Deployment Succeeded for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}: {{ EVENT_PAYLOAD.pull_request.title }
+            ❌ Deployment Succeeded for PR #$${{ steps.PR.outputs.number }}: ${{ steps.PR.outputs.pr_title }}
 
       - name: Discord notification failure
         env:
@@ -73,7 +83,7 @@ jobs:
           !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
           args: >
-            🤩 Deployment succeed for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}: {{ EVENT_PAYLOAD.pull_request.title }
+            🤩 Deployment succeed for PR #${{ steps.PR.outputs.number }}: ${{ steps.PR.outputs.pr_title }}
 
   tag_release:
     needs: [simple_deployment_pipeline]
