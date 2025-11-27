@@ -95,7 +95,7 @@ jobs:
         if: success()
         with:
           args: >
-            webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+            webhook: ${{ secrets.DISCORD_WEBHOOK }}
             message: "✅ Deployment pipeline succeeded for ${{ env.BUMPED_VERSION }}"
             severity: "info"
 
@@ -104,7 +104,7 @@ jobs:
         if: failure()
         with:
           args: >
-            webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+            webhook: ${{ secrets.DISCORD_WEBHOOK }}
             severity: "error"
             message: |
               ❌ Deployment pipeline failed. |
