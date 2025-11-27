@@ -13,7 +13,7 @@ app.listen(PORT, () => {
 app.get('/health', (req, res) => {
   res.send('ok')
 
-  const debug = true
+  const debug = false
   if (debug) {
     throw 'testing healthcheck.'
   }
