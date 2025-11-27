@@ -47,21 +47,30 @@ jobs:
         run: |
           curl "$deploy_url"
 
+      - uses: yu-iskw/merged-pr-info-action@v1.0.1
+        id: merged-pr-info
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Discord notification sucess
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
-        if: success()
+        if: success() &&
+            github.ref == 'refs/heads/main' &&
+            !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
-          args: "✅ Deployment succeeded for PR #{{ EVENT_PAYLOAD.pull_request.number }}: {{ EVENT_PAYLOAD.pull_request.title }}"
+          args: "✅ Deployment succeeded for PR #{{ steps.merged-pr-info.outputs.pull-request-number }}: {{ EVENT_PAYLOAD.pull_request.title }}"
 
       - name: Discord notification failure
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
-        if: failure()
+        if: failure() &&
+            github.ref == 'refs/heads/main' &&
+            !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
-          args: "❌ Deployment failed for PR #{{ EVENT_PAYLOAD.pull_request.number }}: {{ EVENT_PAYLOAD.pull_request.title }}"
+          args: "❌ Deployment failed for PR #{{ steps.merged-pr-info.outputs.pull-request-number }}: {{ EVENT_PAYLOAD.pull_request.title }}"
 
   tag_release:
     needs: [simple_deployment_pipeline]
