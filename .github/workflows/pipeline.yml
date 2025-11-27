@@ -9,32 +9,7 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  check_skip:
-    runs-on: ubuntu-latest
-    outputs:
-      skip: ${{ steps.check_skip.outputs.skip }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Check for #skip in commit messages or PR title
-        id: check_skip
-        run: |
-          SKIP="false"
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            TITLE="${{ github.event.pull_request.title }}"
-            if echo "$TITLE" | grep -q "#skip"; then
-              SKIP="true"
-            fi
-          else
-            COMMITS=$(git log -1 --pretty=%B)
-            if echo "$COMMITS" | grep -q "#skip"; then
-              SKIP="true"
-            fi
-          fi
-          echo "::set-output name=skip::$SKIP"
-
   simple_deployment_pipeline:
-    needs: check_skip
 
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +39,9 @@ jobs:
 
       - name: Deploy
         # Only run this step if the branch is main and skip is false
-        if: github.ref == 'refs/heads/main' && needs.check_skip.outputs.skip != 'true'
+        if: |
+          github.ref == 'refs/heads/main' &&
+          !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
 
         env:
           deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
@@ -87,8 +64,10 @@ jobs:
   # because it updates package.json and package-lock.json as well.
 
   tag_release:
-    needs: [simple_deployment_pipeline, check_skip]
-    if: github.ref == 'refs/heads/main' && needs.check_skip.outputs.skip != 'true'
+    needs: [simple_deployment_pipeline]
+    if: |
+      github.ref == 'refs/heads/main' &&
+      !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
