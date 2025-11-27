@@ -10,6 +10,7 @@ on:
 
 jobs:
   simple_deployment_pipeline:
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,7 +68,6 @@ jobs:
     if: |
       github.ref == 'refs/heads/main' &&
       !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,35 +77,14 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-      - name: Bump version and save
-        id: bump
+      - name: Bump version and tag
         run: |
-          NEW_VERSION=$(npm version patch --no-git-tag-version)
-          git commit -am "Bump version to $NEW_VERSION"
-          git push
-          echo "BUMPED_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-
-      - name: Tag the release
-        run: |
-          git tag "$BUMPED_VERSION"
-          git push origin --tags
+          npm version patch -m "Bump version to %s"
+          git push --follow-tags
 
       - name: Notify Discord on success
         uses: Ilshidur/action-discord@master
-        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          args: >
-            webhook: ${{ secrets.DISCORD_WEBHOOK }}
-            message: "✅ Deployment pipeline succeeded for ${{ env.BUMPED_VERSION }}"
-            severity: "info"
-
-      - name: Notify Discord on failure
-        uses: Ilshidur/action-discord@master
-        if: failure()
-        with:
-          args: >
-            webhook: ${{ secrets.DISCORD_WEBHOOK }}
-            severity: "error"
-            message: |
-              ❌ Deployment pipeline failed. |
-                 Commit: ${{ github.sha }}
+          args: "New version deployed successfully! Version: ${{ steps.bump-version.outputs.new_version }}"
