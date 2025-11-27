@@ -92,4 +92,20 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           message: "✅ Deployment pipeline succeeded for $BUMPED_VERSION" 
-  
+          severity: "info"
+
+      - name: Notify Discord on failure
+        uses: Ilshidur/action-discord@master
+        if: failure()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          severity: "error"
+          message: |
+            ❌ Deployment pipeline failed:
+# Disabled because testing channel is public.
+#            • Workflow: ${{ github.workflow }}
+#            • Job: ${{ github.job }}
+#            • Branch: ${{ github.ref_name }}
+#            • Commit: ${{ github.sha }}
+#            • Commit message: ${{ github.event.head_commit.message }}
+#            • Author: ${{ github.event.head_commit.author.name }}
