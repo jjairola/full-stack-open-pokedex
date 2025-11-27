@@ -14,6 +14,8 @@ jobs:
     outputs:
       skip: ${{ steps.check_skip.outputs.skip }}
     steps:
+      - uses: actions/checkout@v4
+      
       - name: Check for #skip in commit messages or PR title
         id: check_skip
         run: |
