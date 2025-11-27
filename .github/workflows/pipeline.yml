@@ -60,7 +60,9 @@ jobs:
             github.ref == 'refs/heads/main' &&
             !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
-          args: "✅ Deployment succeeded for PR #{{ steps.merged-pr-info.outputs.pull-request-number }}: {{ EVENT_PAYLOAD.pull_request.title }}"
+          args: >
+            ❌ Deployment failed for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}:
+            ${{ github.event.pull_request.title }}
 
       - name: Discord notification failure
         env:
@@ -70,7 +72,9 @@ jobs:
             github.ref == 'refs/heads/main' &&
             !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
-          args: "❌ Deployment failed for PR #{{ steps.merged-pr-info.outputs.pull-request-number }}: {{ EVENT_PAYLOAD.pull_request.title }}"
+          args: >
+            🤩 Succeeded for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}:
+            ${{ github.event.pull_request.title }}
 
   tag_release:
     needs: [simple_deployment_pipeline]
