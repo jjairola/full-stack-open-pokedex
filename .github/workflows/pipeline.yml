@@ -72,7 +72,7 @@ jobs:
           !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
           args: >
-            ❌ Deployment Succeeded for PR #$${{ steps.PR.outputs.number }}: ${{ steps.PR.outputs.pr_title }}
+            ✅ Deployment failed for PR #$${{ steps.PR.outputs.number }}: ${{ steps.PR.outputs.pr_title }}
 
       - name: Discord notification failure
         env:
@@ -83,7 +83,7 @@ jobs:
           !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
           args: >
-            🤩 Deployment succeed for PR #${{ steps.PR.outputs.number }}: ${{ steps.PR.outputs.pr_title }}
+            ❌ Deployment succeed for PR #${{ steps.PR.outputs.number }}: ${{ steps.PR.outputs.pr_title }}
 
   tag_release:
     needs: [simple_deployment_pipeline]
