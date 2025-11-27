@@ -37,6 +37,11 @@ jobs:
       - name: Run build
         run: npm run build
 
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.75.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Deploy
         # Only run this step if the branch is main
         if: github.ref == 'refs/heads/main'
