@@ -7,17 +7,16 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize]
-    
 
 jobs:
   simple_deployment_pipeline:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install dependencies
         run: npm ci
@@ -27,7 +26,7 @@ jobs:
 
       - name: Run tests
         run: npm test
-      
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
@@ -37,11 +36,6 @@ jobs:
       - name: Run build
         run: npm run build
 
-      - name: Bump version and push tag
-        uses: anothrNick/github-tag-action@1.75.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Deploy
         # Only run this step if the branch is main
         if: github.ref == 'refs/heads/main'
@@ -49,3 +43,34 @@ jobs:
           deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           curl "$deploy_url"
+
+  # tag_release:
+  #   needs: [simple_deployment_pipeline]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Bump version and push tag
+  #       if: github.ref == 'refs/heads/main'
+  #       uses: anothrNick/github-tag-action@1.75.0
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         DEFAULT_BUMP: patch
+
+  tag_release:
+    if: |
+      github.ref == 'refs/heads/main' &&
+      !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
+    needs: [simple_deployment_pipeline]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Bump version and tag
+        run: |
+          npm version patch -m "Bump version to %s"
+          git push --follow-tags
