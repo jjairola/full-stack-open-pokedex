@@ -57,24 +57,22 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         if: success() &&
-            github.ref == 'refs/heads/main' &&
-            !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
+          github.ref == 'refs/heads/main' &&
+          !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
           args: >
-            ❌ Deployment failed for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}:
-            ${{ github.event.pull_request.title }}
+            ❌ Deployment Succeeded for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}: ${{ github.event.pull_request.title }}
 
       - name: Discord notification failure
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         if: failure() &&
-            github.ref == 'refs/heads/main' &&
-            !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
+          github.ref == 'refs/heads/main' &&
+          !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
         with:
           args: >
-            🤩 Succeeded for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}:
-            ${{ github.event.pull_request.title }}
+            🤩 Deployment succeed for PR #${{ steps.merged-pr-info.outputs.pull-request-number }}: ${{ github.event.pull_request.title }}
 
   tag_release:
     needs: [simple_deployment_pipeline]
