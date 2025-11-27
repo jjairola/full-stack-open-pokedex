@@ -48,20 +48,21 @@ jobs:
         run: |
           curl "$deploy_url"
 
-  # tag_release:
-  #   needs: [simple_deployment_pipeline]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Bump version and push tag
-  #       if: github.ref == 'refs/heads/main'
-  #       uses: anothrNick/github-tag-action@1.75.0
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         DEFAULT_BUMP: patch
-  #
-  # Decided to use npm version to bump and tag instead of the action above
-  # because it updates package.json and package-lock.json as well.
+      - name: Discord notification sucess
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        if: success()
+        with:
+          args: '✅ Deployment succeeded for PR: {{ EVENT_PAYLOAD.pull_request.id }}'
+
+      - name: Discord notification failure
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        if: failure()
+        with:
+          args: '❌ Deployment failed for PR: {{ EVENT_PAYLOAD.pull_request.id }'
 
   tag_release:
     needs: [simple_deployment_pipeline]
@@ -71,20 +72,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Configure git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-
-      - name: Bump version and tag
-        run: |
-          npm version patch -m "Bump version to %s"
-          git push --follow-tags
-
-      - name: Notify Discord on success
-        uses: Ilshidur/action-discord@master
+      - name: Bump version and push tag
+        if: github.ref == 'refs/heads/main'
+        uses: anothrNick/github-tag-action@1.75.0
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        with:
-          args: "New version deployed successfully! Version: ${{ steps.bump-version.outputs.new_version }}"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+  
