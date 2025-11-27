@@ -10,7 +10,6 @@ on:
 
 jobs:
   simple_deployment_pipeline:
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +45,7 @@ jobs:
         env:
           deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          curl "$deploy_url"        
+          curl "$deploy_url"
 
   # tag_release:
   #   needs: [simple_deployment_pipeline]
@@ -68,10 +67,15 @@ jobs:
     if: |
       github.ref == 'refs/heads/main' &&
       !contains(github.event.head_commit.message || github.event.pull_request.title, '#skip')
-      
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
       - name: Bump version and save
         id: bump
@@ -80,7 +84,7 @@ jobs:
           git commit -am "Bump version to $NEW_VERSION"
           git push
           echo "BUMPED_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-      
+
       - name: Tag the release
         run: |
           git tag "$BUMPED_VERSION"
@@ -90,22 +94,18 @@ jobs:
         uses: Ilshidur/action-discord@master
         if: success()
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          message: "✅ Deployment pipeline succeeded for $BUMPED_VERSION" 
-          severity: "info"
+          args: >
+            webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+            message: "✅ Deployment pipeline succeeded for ${{ env.BUMPED_VERSION }}"
+            severity: "info"
 
       - name: Notify Discord on failure
         uses: Ilshidur/action-discord@master
         if: failure()
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          severity: "error"
-          message: |
-            ❌ Deployment pipeline failed:
-# Disabled because testing channel is public.
-#            • Workflow: ${{ github.workflow }}
-#            • Job: ${{ github.job }}
-#            • Branch: ${{ github.ref_name }}
-#            • Commit: ${{ github.sha }}
-#            • Commit message: ${{ github.event.head_commit.message }}
-#            • Author: ${{ github.event.head_commit.author.name }}
+          args: >
+            webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+            severity: "error"
+            message: |
+              ❌ Deployment pipeline failed. |
+                 Commit: ${{ github.sha }}
